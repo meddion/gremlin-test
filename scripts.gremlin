@@ -1,0 +1,56 @@
+graph = TinkerGraph.open()
+g = graph.traversal()
+
+names = ["Denys", "Bohdan", "Volodymyr", "Roman", "Tanya"]
+names.each{g.addV("USER").property("name", it).next()}
+
+names2 = ["Mark", "Andrey"]
+names2.each{g.addV("USER").property("name", it).next()}
+
+g.V().hasLabel("USER").values("name")
+
+g.addV('GROUP').property('name', 'friends')
+
+g.addV('SCOPE').property("type", "devs").
+    addV('SCOPE').property("type", "pm")
+
+names.each{g.V().has("GROUP", "name", "friends").addE("ROLE").to(V()
+    .has("USER", "name", it)).next()}
+
+
+g.V().has("SCOPE", "type", "pm").addE("ROLE").to(V().has("name", "Tanya"))
+
+// select not Tanya)0))
+devs = g.V().has("GROUP", "name", "friends").out("ROLE").
+    has("USER", 'name', not(eq("Tanya"))).toList()
+
+g.V(devs).addE("ROLE").from(V().has("SCOPE", "type", "devs"))
+
+g.V().has("SCOPE", "type", "pm").out("ROLE").values("name")
+g.V().has("SCOPE", "type", "devs").out("ROLE").values("name")
+
+
+items = ["power", "horilka", "tank"]
+items.each{g.addV("OBJ").property("name", it).next()}
+
+
+
+g.V().has("OBJ", "name", within(["horilka", "power"])).
+    addE("HAS").from(V().has("GROUP", "name", "friends"))
+
+
+g.V().has("SCOPE", "type", "pm").addE("HAS").
+    to(V().has("OBJ", "name", "power"))
+
+g.V().has("OBJ", "name", "power").in("HAS").valueMap(true)
+
+
+// PATH TO POWER!!
+// for pm ==>[USER,SCOPE,OBJ]
+g.V().has("name", "Tanya").in("ROLE").has("type", "pm").out("HAS").path().by(label)
+// for devs ==>[USER,GROUP,OBJ]
+g.V(devs).in("ROLE").has("name", "friends").limit(1).out("HAS").has("name", "power").path().by(label)
+
+
+// to print ALL
+g.V().valueMap(true)
